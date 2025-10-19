@@ -12,12 +12,14 @@ class Board:
         self.black_out = 0
         self.game_over = False
         self.white_turn = True
+        self.head_moved = False
         
     def start_game(self):
         self.Black[0] = 15
         self.White[12] = 15
         
     def roll_dices(self):
+        self.head_moved = False
         if self.wMoves or self.bMoves:
             print("There are unplayed moves")
             return False
@@ -50,9 +52,14 @@ class Board:
     
     def is_valid_move(self, from_pos, dice):
         if self.white_turn:
+            if self.head_moved and from_pos==12:
+                return False
+            
             return self.White[from_pos] > 0 and self.Black[(from_pos + dice) % 24] == 0
         else:
-            return self.Black[from_pos] > 0 and self.White[(from_pos - dice) % 24] == 0
+            if self.head_moved and from_pos==0:
+                return False
+            return self.Black[from_pos] > 0 and self.White[(from_pos + dice) % 24] == 0
     
     def move_piece(self, from_pos, to_pos):
         dice = (to_pos - from_pos) % 24
@@ -60,6 +67,8 @@ class Board:
         if self.white_turn and (from_pos, to_pos) in self.wMoves:
             self.White[from_pos] -= 1
             self.white_dices.remove(dice)
+            if from_pos == 12:
+                self.head_moved = True
             if from_pos + dice >= 12 and from_pos < 12:
                 self.white_out += 1
                 print(f"White piece moved out!")
@@ -76,6 +85,8 @@ class Board:
         elif not self.white_turn and (from_pos, to_pos) in self.bMoves:
             self.Black[from_pos] -= 1
             self.black_dices.remove(dice)
+            if from_pos == 0:
+                self.head_moved = True
             if from_pos + dice >= 24:
                 self.black_out += 1
                 print(f"Black piece moved out!")
