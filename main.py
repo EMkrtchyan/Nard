@@ -14,6 +14,8 @@ class Board:
         self.game_over = False
         self.white_turn = True
         self.head_moved = False
+        self.can_bear_off_white = False
+        self.can_bear_off_black = False
         
     def start_game(self):
         self.Black[0] = 15
@@ -54,6 +56,8 @@ class Board:
     def is_valid_move(self, from_pos, dice):
         if self.white_turn:
             if self.head_moved and from_pos==12:
+                return False
+            if from_pos>=6 and from_pos < 12 and from_pos + dice>=12 and not self.can_bear_off_white:
                 return False
             
             return self.White[from_pos] > 0 and self.Black[(from_pos + dice) % 24] == 0
@@ -149,30 +153,30 @@ class Board:
         for dice in dices:
             if self.white_turn and dice in self.white_dices:
                 from_poss = [i for i, value in enumerate(self.White) if value != 0]
-                can_bear_off_white = self.can_bear_off(True)
+                self.can_bear_off_white = self.can_bear_off(True)
                 
                 for from_pos in from_poss:
                     to_pos = (from_pos + dice) % 24
                     if self.is_valid_move(from_pos, dice):
                         # Check if this move would go past the board
-                        if can_bear_off_white and from_pos >= 6 and from_pos < 12 and from_pos + dice >= 12:
+                        if self.can_bear_off_white and from_pos >= 6 and from_pos < 12 and from_pos + dice >= 12:
                             self.wMoves.append((from_pos, 24))  # Bear off
                         else:
                             self.wMoves.append((from_pos, to_pos))  # Regular move
-                    elif can_bear_off_white and from_pos >= 6 and from_pos < 12:
+                    elif self.can_bear_off_white and from_pos >= 6 and from_pos < 12:
                         # If in home quadrant but blocked, still allow bearing off if exceeds board
                         if from_pos + dice >= 12:
                             self.wMoves.append((from_pos, 24))
                         
             elif not self.white_turn and dice in self.black_dices:
                 from_poss = [i for i, value in enumerate(self.Black) if value != 0]
-                can_bear_off_black = self.can_bear_off(False)
+                self.can_bear_off_black = self.can_bear_off(False)
                 
                 for from_pos in from_poss:
                     to_pos = from_pos + dice
                     if to_pos < 24 and self.is_valid_move(from_pos, dice):
                         self.bMoves.append((from_pos, to_pos))  # Regular move
-                    elif can_bear_off_black and from_pos >= 18 and from_pos < 24:
+                    elif self.can_bear_off_black and from_pos >= 18 and from_pos < 24:
                         # If in home quadrant and move exceeds board, bear off
                         if to_pos >= 24:
                             self.bMoves.append((from_pos, 24))
